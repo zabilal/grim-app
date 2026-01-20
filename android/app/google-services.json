@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "528151206131",
+    "project_id": "grim-app-fa656",
+    "storage_bucket": "grim-app-fa656.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:528151206131:android:8552beaf7e3f6cd1a5bf86",
+        "android_client_info": {
+          "package_name": "com.zaktech.grim"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "528151206131-t0dbi78d407h46tlmehq5gtssvhvdsf1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zaktech.grim",
+            "certificate_hash": "77a4b96ca29746b5ca8762e4d605967cd64d904d"
+          }
+        },
+        {
+          "client_id": "528151206131-0pu2okce0pep2m6gebahi8u623fomqqp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoOFEjoiDJ8B5NIXdmxPUIzL9LcFZ99Mw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "528151206131-0pu2okce0pep2m6gebahi8u623fomqqp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
