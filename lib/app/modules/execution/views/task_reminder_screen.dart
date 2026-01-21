@@ -105,32 +105,33 @@ class TaskReminderScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      // Snooze for 5 minutes using notification service
-                      final notificationService =
-                          Get.find<NotificationService>();
-                      final snoozeTime = DateTime.now().add(
-                        const Duration(minutes: 5),
-                      );
-                      notificationService.scheduleTaskReminder(
-                        task,
-                        snoozeTime,
-                      );
+                  // TextButton(
+                  //   onPressed: () {
+                  //     // Snooze for 5 minutes using notification service
+                  //     final notificationService =
+                  //         Get.find<NotificationService>();
+                  //     final snoozeTime = DateTime.now().add(
+                  //       const Duration(minutes: 5),
+                  //     );
+                  //     notificationService.scheduleTaskReminder(
+                  //       task,
+                  //       snoozeTime,
+                  //     );
 
-                      Get.back();
-                      Get.snackbar(
-                        'Snoozed',
-                        'Reminder will appear in 5 minutes',
-                        backgroundColor: Colors.orange,
-                        colorText: Colors.white,
-                      );
-                    },
-                    child: Text(
-                      'Snooze (5 min)',
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  ),
+                  //     Get.back();
+                  //     Get.snackbar(
+                  //       'Snoozed',
+                  //       'Reminder will appear in 5 minutes',
+                  //       backgroundColor: Colors.orange,
+                  //       colorText: Colors.white,
+                  //     );
+                  //   },
+                  //   child: Text(
+                  //     'Snooze (5 min)',
+                  //     style: TextStyle(color: Colors.white54),
+                  //   ),
+                  // ),
+                
                 ],
               ),
             ),
