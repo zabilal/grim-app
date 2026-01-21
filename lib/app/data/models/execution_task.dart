@@ -8,6 +8,8 @@ class ExecutionTask {
   bool isCompleted;
   DateTime? completedAt;
   bool hasReminder;
+  bool isActive; // New field to track if task is currently active
+  DateTime? startedAt; // When the task was started
 
   ExecutionTask({
     required this.id,
@@ -18,6 +20,8 @@ class ExecutionTask {
     this.isCompleted = false,
     this.completedAt,
     this.hasReminder = true,
+    this.isActive = false,
+    this.startedAt,
   });
 
   Map<String, dynamic> toJson() => {
@@ -29,6 +33,8 @@ class ExecutionTask {
     'isCompleted': isCompleted,
     'completedAt': completedAt?.toIso8601String(),
     'hasReminder': hasReminder,
+    'isActive': isActive,
+    'startedAt': startedAt?.toIso8601String(),
   };
 
   factory ExecutionTask.fromJson(Map<String, dynamic> json) => ExecutionTask(
@@ -42,5 +48,9 @@ class ExecutionTask {
         ? DateTime.parse(json['completedAt'])
         : null,
     hasReminder: json['hasReminder'] ?? true,
+    isActive: json['isActive'] ?? false,
+    startedAt: json['startedAt'] != null
+        ? DateTime.parse(json['startedAt'])
+        : null,
   );
 }

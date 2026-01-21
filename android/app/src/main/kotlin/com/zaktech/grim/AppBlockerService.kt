@@ -1,23 +1,30 @@
 package com.zaktech.grim
 
 import android.app.Service
+import android.app.usage.UsageStatsManager
+import android.app.usage.UsageStats
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.app.ActivityManager
+import android.widget.Toast
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
-import android.app.usage.UsageStatsManager
-import android.app.usage.UsageStats
-import android.content.pm.PackageManager
-import android.app.ActivityManager
-import android.widget.Toast
+import android.view.KeyEvent
+import android.view.WindowManager
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.os.Build
 
 class AppBlockerService : Service() {
     
     private val handler = Handler(Looper.getMainLooper())
     private var isRunning = false
     private val blockedApps = mutableSetOf<String>()
+    private var isNavigationBlocking = false
+    private var navigationBlockReceiver: BroadcastReceiver? = null
     
     companion object {
         private const val TAG = "AppBlockerService"
@@ -51,6 +58,18 @@ class AppBlockerService : Service() {
             val intent = Intent(context, AppBlockerService::class.java)
             context.stopService(intent)
         }
+        
+        fun startNavigationBlock(context: Context) {
+            val intent = Intent(context, AppBlockerService::class.java)
+            intent.action = "START_NAVIGATION_BLOCK"
+            context.startService(intent)
+        }
+        
+        fun stopNavigationBlock(context: Context) {
+            val intent = Intent(context, AppBlockerService::class.java)
+            intent.action = "STOP_NAVIGATION_BLOCK"
+            context.startService(intent)
+        }
     }
     
     override fun onCreate() {
@@ -60,6 +79,18 @@ class AppBlockerService : Service() {
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "AppBlockerService started")
+        
+        // Handle different actions
+        when (intent?.action) {
+            "START_NAVIGATION_BLOCK" -> {
+                startNavigationBlocking()
+                return START_STICKY
+            }
+            "STOP_NAVIGATION_BLOCK" -> {
+                stopNavigationBlocking()
+                return START_NOT_STICKY
+            }
+        }
         
         // Get blocked apps from intent
         val blockedAppsArray = intent?.getStringArrayExtra("blocked_apps")
@@ -171,7 +202,73 @@ class AppBlockerService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
+        isNavigationBlocking = false
+        navigationBlockReceiver?.let { unregisterReceiver(it) }
         handler.removeCallbacksAndMessages(null)
         Log.d(TAG, "AppBlockerService destroyed")
+    }
+    
+    private fun startNavigationBlocking() {
+        if (isNavigationBlocking) return
+        
+        isNavigationBlocking = true
+        Log.d(TAG, "Starting navigation blocking")
+        
+        // Register broadcast receiver to intercept home button and recent apps
+        navigationBlockReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    Intent.ACTION_CLOSE_SYSTEM_DIALOGS -> {
+                        // User pressed home or recent apps button
+                        Log.d(TAG, "Navigation button pressed - blocking")
+                        // Show our app again
+                        val bringToFrontIntent = Intent(context, MainActivity::class.java)
+                        bringToFrontIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        context?.startActivity(bringToFrontIntent)
+                    }
+                }
+            }
+        }
+        
+        val filter = IntentFilter()
+        filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+        registerReceiver(navigationBlockReceiver, filter)
+        
+        // Show persistent overlay that blocks navigation
+        showNavigationBlockOverlay()
+    }
+    
+    private fun stopNavigationBlocking() {
+        if (!isNavigationBlocking) return
+        
+        isNavigationBlocking = false
+        Log.d(TAG, "Stopping navigation blocking")
+        
+        navigationBlockReceiver?.let { unregisterReceiver(it) }
+        navigationBlockReceiver = null
+        
+        // Hide overlay
+        hideNavigationBlockOverlay()
+    }
+    
+    private fun showNavigationBlockOverlay() {
+        try {
+            val intent = Intent(this, FullscreenReminderActivity::class.java)
+            intent.putExtra("navigation_block", true)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing navigation block overlay: ${e.message}")
+        }
+    }
+    
+    private fun hideNavigationBlockOverlay() {
+        try {
+            val intent = Intent(this, FullscreenReminderActivity::class.java)
+            intent.action = "HIDE_OVERLAY"
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error hiding navigation block overlay: ${e.message}")
+        }
     }
 }

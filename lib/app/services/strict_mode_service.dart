@@ -119,6 +119,9 @@ class StrictModeService extends GetxService {
       // Start native app blocker service
       await AppBlockerChannel.startAppBlocker(blockedApps.toList());
 
+      // Block device navigation buttons (Home, Back, Recent Apps)
+      await _blockDeviceNavigation();
+
       // Start periodic checking as backup
       _strictModeTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
         _checkForBlockedApps();
@@ -129,16 +132,12 @@ class StrictModeService extends GetxService {
     }
   }
 
-  Future<void> deactivateStrictMode() async {
-    if (isStrictModeActive.value) {
-      isStrictModeActive.value = false;
-      _strictModeTimer?.cancel();
-
-      // Stop native app blocker service
-      await AppBlockerChannel.stopAppBlocker();
-
-      // Show strict mode deactivation notification
-      await _showStrictModeNotification(false);
+  Future<void> _blockDeviceNavigation() async {
+    try {
+      // Use native navigation blocking
+      await AppBlockerChannel.startNavigationBlock();
+    } catch (e) {
+      print('Error blocking device navigation: $e');
     }
   }
 
@@ -151,6 +150,22 @@ class StrictModeService extends GetxService {
       await _showStrictModeWarning();
     } catch (e) {
       print('Error checking blocked apps: $e');
+    }
+  }
+
+  Future<void> deactivateStrictMode() async {
+    if (isStrictModeActive.value) {
+      isStrictModeActive.value = false;
+      _strictModeTimer?.cancel();
+
+      // Stop native app blocker service
+      await AppBlockerChannel.stopAppBlocker();
+
+      // Cancel navigation block overlay
+      await AppBlockerChannel.stopNavigationBlock();
+
+      // Show strict mode deactivation notification
+      await _showStrictModeNotification(false);
     }
   }
 
@@ -228,6 +243,8 @@ class StrictModeService extends GetxService {
   bool isAppBlocked(String packageName) {
     return blockedApps.contains(packageName);
   }
+
+  bool get isNavigationBlocked => isStrictModeActive.value;
 
   @override
   void onClose() {

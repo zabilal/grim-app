@@ -46,4 +46,20 @@ class AppBlockerChannel {
       return false;
     }
   }
+
+  static Future<void> startNavigationBlock() async {
+    try {
+      await _channel.invokeMethod('startNavigationBlock');
+    } catch (e) {
+      print('Error starting navigation block: $e');
+    }
+  }
+
+  static Future<void> stopNavigationBlock() async {
+    try {
+      await _channel.invokeMethod('stopNavigationBlock');
+    } catch (e) {
+      print('Error stopping navigation block: $e');
+    }
+  }
 }

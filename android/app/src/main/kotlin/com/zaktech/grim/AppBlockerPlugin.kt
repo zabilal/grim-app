@@ -47,6 +47,14 @@ class AppBlockerPlugin : MethodCallHandler {
                 stopAppBlocker()
                 result.success(true)
             }
+            "startNavigationBlock" -> {
+                startNavigationBlock()
+                result.success(true)
+            }
+            "stopNavigationBlock" -> {
+                stopNavigationBlock()
+                result.success(true)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -102,6 +110,24 @@ class AppBlockerPlugin : MethodCallHandler {
             println("Stopping app blocker")
         } catch (e: Exception) {
             println("Error stopping app blocker: $e")
+        }
+    }
+
+    private fun startNavigationBlock() {
+        try {
+            AppBlockerService.startNavigationBlock(context!!)
+            println("Starting navigation block")
+        } catch (e: Exception) {
+            println("Error starting navigation block: $e")
+        }
+    }
+
+    private fun stopNavigationBlock() {
+        try {
+            AppBlockerService.stopNavigationBlock(context!!)
+            println("Stopping navigation block")
+        } catch (e: Exception) {
+            println("Error stopping navigation block: $e")
         }
     }
 }

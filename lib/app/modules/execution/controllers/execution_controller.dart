@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -13,6 +14,12 @@ class ExecutionController extends GetxController {
   final selectedDay = 'Mon'.obs;
   final topGoalsPerDay = <String, String>{}.obs;
   late TextEditingController topGoalController;
+
+  // Timer variables for auto-close functionality
+  final remainingTime = 0.obs;
+  final isTimerRunning = false.obs;
+  Timer? _timer;
+  String? _activeTaskId;
 
   @override
   void onInit() {
@@ -137,16 +144,26 @@ class ExecutionController extends GetxController {
     if (taskIndex != -1) {
       final task = tasks[taskIndex];
 
-      if (!task.isCompleted) {
-        // Task is being started - activate strict mode if it's deep work
+      if (!task.isActive && !task.isCompleted) {
+        // Task is being started - activate it
+        task.isActive = true;
+        task.startedAt = DateTime.now();
         _activateStrictModeIfNeeded(task);
-      } else {
-        // Task is being completed - deactivate strict mode
+      } else if (task.isActive && !task.isCompleted) {
+        // Task is being completed
+        task.isActive = false;
+        task.isCompleted = true;
+        task.completedAt = DateTime.now();
+        _deactivateStrictModeIfNeeded();
+      } else if (task.isCompleted) {
+        // Task is being reset (uncompleted)
+        task.isCompleted = false;
+        task.completedAt = null;
+        task.isActive = false;
+        task.startedAt = null;
         _deactivateStrictModeIfNeeded();
       }
 
-      task.isCompleted = !task.isCompleted;
-      task.completedAt = task.isCompleted ? DateTime.now() : null;
       tasks.refresh();
       saveTasks();
     }
@@ -232,6 +249,17 @@ class ExecutionController extends GetxController {
   }
 
   void _showTaskReminderScreen(ExecutionTask task) {
+    // Automatically activate the task when showing the reminder
+    if (!task.isActive && !task.isCompleted) {
+      task.isActive = true;
+      task.startedAt = DateTime.now();
+      _activateStrictModeIfNeeded(task);
+      saveTasks();
+    }
+
+    // Start auto-close timer (1 hour default duration)
+    _startAutoCloseTimer(task);
+
     Get.to(
       () => TaskReminderScreen(task: task),
       fullscreenDialog: true,
@@ -239,8 +267,87 @@ class ExecutionController extends GetxController {
     );
   }
 
+  void _startAutoCloseTimer(ExecutionTask task) {
+    _stopTimer(); // Stop any existing timer
+
+    _activeTaskId = task.id;
+    isTimerRunning.value = true;
+
+    // Set default duration to 1 hour (60 minutes)
+    final durationMinutes = 60;
+    final endTime = task.startedAt!.add(Duration(minutes: durationMinutes));
+    final now = DateTime.now();
+    remainingTime.value = endTime.difference(now).inSeconds;
+
+    if (remainingTime.value > 0) {
+      _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+        remainingTime.value--;
+        if (remainingTime.value <= 0) {
+          _stopTimer();
+          _autoCompleteTask(task.id);
+        }
+      });
+    } else {
+      // Task should have already ended
+      _stopTimer();
+      _autoCompleteTask(task.id);
+    }
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+    isTimerRunning.value = false;
+    remainingTime.value = 0;
+    _activeTaskId = null;
+  }
+
+  void _autoCompleteTask(String taskId) {
+    final taskIndex = tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex != -1) {
+      final task = tasks[taskIndex];
+      if (task.isActive && !task.isCompleted) {
+        // Complete the task
+        task.isActive = false;
+        task.isCompleted = true;
+        task.completedAt = DateTime.now();
+        _deactivateStrictModeIfNeeded();
+        tasks.refresh();
+        saveTasks();
+
+        // Close reminder screen if open
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+
+        // Show completion notification
+        Get.snackbar(
+          'Task Completed',
+          'Task time has ended and was marked as complete',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: Duration(seconds: 3),
+        );
+      }
+    }
+  }
+
+  String getRemainingTimeString() {
+    final seconds = remainingTime.value;
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    } else {
+      return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
+  }
+
   @override
   void onClose() {
+    _stopTimer();
     topGoalController.dispose();
     super.onClose();
   }
