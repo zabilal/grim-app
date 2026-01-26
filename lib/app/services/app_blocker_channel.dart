@@ -47,6 +47,30 @@ class AppBlockerChannel {
     }
   }
 
+  static Future<bool> requestSystemOverlayPermission() async {
+    try {
+      final bool granted = await _channel.invokeMethod(
+        'requestSystemOverlayPermission',
+      );
+      return granted;
+    } catch (e) {
+      print('Error requesting system overlay permission: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> hasSystemOverlayPermission() async {
+    try {
+      final bool hasPermission = await _channel.invokeMethod(
+        'hasSystemOverlayPermission',
+      );
+      return hasPermission;
+    } catch (e) {
+      print('Error checking system overlay permission: $e');
+      return false;
+    }
+  }
+
   static Future<void> startNavigationBlock() async {
     try {
       await _channel.invokeMethod('startNavigationBlock');
@@ -60,6 +84,22 @@ class AppBlockerChannel {
       await _channel.invokeMethod('stopNavigationBlock');
     } catch (e) {
       print('Error stopping navigation block: $e');
+    }
+  }
+
+  static Future<void> startLockTask() async {
+    try {
+      await _channel.invokeMethod('startLockTask');
+    } catch (e) {
+      print('Error starting lock task: $e');
+    }
+  }
+
+  static Future<void> stopLockTask() async {
+    try {
+      await _channel.invokeMethod('stopLockTask');
+    } catch (e) {
+      print('Error stopping lock task: $e');
     }
   }
 }

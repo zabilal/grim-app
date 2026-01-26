@@ -100,21 +100,27 @@ class StrictModeService extends GetxService {
   Future<void> activateStrictMode(String taskType) async {
     if (!isStrictModeActive.value &&
         taskType.toLowerCase().contains('deep work')) {
+      // Check and request necessary permissions
+      final hasOverlayPermission =
+          await AppBlockerChannel.hasSystemOverlayPermission();
+      if (!hasOverlayPermission) {
+        print('Requesting system overlay permission for navigation blocking');
+        await AppBlockerChannel.requestSystemOverlayPermission();
+        // Wait a moment for user to grant permission
+        await Future.delayed(Duration(seconds: 2));
+      }
+
+      final hasUsagePermission =
+          await AppBlockerChannel.hasUsageStatsPermission();
+      if (!hasUsagePermission) {
+        print('Requesting usage stats permission for app blocking');
+        await AppBlockerChannel.requestUsageStatsPermission();
+      }
+
       isStrictModeActive.value = true;
 
-      // Check and request usage stats permission
-      final hasPermission = await AppBlockerChannel.hasUsageStatsPermission();
-      if (!hasPermission) {
-        final granted = await AppBlockerChannel.requestUsageStatsPermission();
-        if (!granted) {
-          Get.snackbar(
-            'Permission Required',
-            'Usage stats permission is required for strict mode. Please enable it in settings.',
-            backgroundColor: Colors.orange,
-          );
-          return;
-        }
-      }
+      // Load blocked apps from settings
+      loadBlockedApps();
 
       // Start native app blocker service
       await AppBlockerChannel.startAppBlocker(blockedApps.toList());
@@ -122,9 +128,16 @@ class StrictModeService extends GetxService {
       // Block device navigation buttons (Home, Back, Recent Apps)
       await _blockDeviceNavigation();
 
+      // Start Lock Task Mode for absolute blocking
+      await AppBlockerChannel.startLockTask();
+
       // Start periodic checking as backup
       _strictModeTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-        _checkForBlockedApps();
+        if (isStrictModeActive.value) {
+          _checkForBlockedApps();
+        } else {
+          timer.cancel();
+        }
       });
 
       // Show strict mode activation notification
@@ -163,6 +176,9 @@ class StrictModeService extends GetxService {
 
       // Cancel navigation block overlay
       await AppBlockerChannel.stopNavigationBlock();
+
+      // Stop Lock Task Mode
+      await AppBlockerChannel.stopLockTask();
 
       // Show strict mode deactivation notification
       await _showStrictModeNotification(false);

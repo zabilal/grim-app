@@ -65,7 +65,7 @@ class ExecutionSheetView extends GetView<ExecutionController> {
     ExecutionController controller,
     ThemeController themeController,
   ) {
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    final days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
     return SizedBox(
       height: 50,
