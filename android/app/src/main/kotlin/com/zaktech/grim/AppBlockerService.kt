@@ -17,6 +17,9 @@ import android.view.WindowManager
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import android.os.Build
+import android.app.NotificationChannel
+import android.app.Notification
+import androidx.core.app.NotificationCompat
 
 class AppBlockerService : Service() {
     
@@ -103,12 +106,37 @@ class AppBlockerService : Service() {
         
         if (!isRunning) {
             isRunning = true
+            createNotificationChannel()
+            startForeground()
             startAppMonitoring()
         }
         
         return START_STICKY
     }
-    
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "app_blocker_service",
+                "App Blocker Service",
+                android.app.NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = getSystemService(android.app.NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun startForeground() {
+        val notification = NotificationCompat.Builder(this, "app_blocker_service")
+            .setContentTitle("Strict Mode Active")
+            .setContentText("Distracting apps are being blocked.")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+        
+        startForeground(1, notification)
+    }
+
     private fun startAppMonitoring() {
         val runnable = object : Runnable {
             override fun run() {

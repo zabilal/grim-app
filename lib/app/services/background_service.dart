@@ -19,7 +19,7 @@ class BackgroundService {
 
     // Initialize notifications for background
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_launcher');
 
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
@@ -70,7 +70,7 @@ class BackgroundService {
 
     // Initialize notifications for background
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_launcher');
 
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
@@ -118,7 +118,7 @@ class BackgroundService {
                 showWhen: true,
                 enableVibration: true,
                 playSound: true,
-                icon: '@mipmap/ic_launcher',
+                icon: '@drawable/ic_launcher',
               );
 
           const NotificationDetails platformChannelSpecifics =
@@ -186,7 +186,7 @@ class BackgroundService {
           showWhen: true,
           enableVibration: true,
           playSound: true,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_launcher',
         );
 
     const NotificationDetails platformChannelSpecifics = NotificationDetails(

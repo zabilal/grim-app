@@ -26,7 +26,7 @@ class NotificationService extends GetxService {
     // Initialize timezone
     tz.initializeTimeZones();
 
-    // Android initialization settings
+    // Android initialization settings - use drawable resource
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 

@@ -34,6 +34,12 @@ class AppBlockerPlugin : MethodCallHandler {
             "requestUsageStatsPermission" -> {
                 result.success(requestUsageStatsPermission())
             }
+            "hasSystemOverlayPermission" -> {
+                result.success(hasSystemOverlayPermission())
+            }
+            "requestSystemOverlayPermission" -> {
+                result.success(requestSystemOverlayPermission())
+            }
             "startAppBlocker" -> {
                 val blockedApps = call.argument<List<String>>("blockedApps")
                 if (blockedApps != null) {
@@ -53,6 +59,14 @@ class AppBlockerPlugin : MethodCallHandler {
             }
             "stopNavigationBlock" -> {
                 stopNavigationBlock()
+                result.success(true)
+            }
+            "startLockTask" -> {
+                MainActivity.instance?.startLockTaskMode()
+                result.success(true)
+            }
+            "stopLockTask" -> {
+                MainActivity.instance?.stopLockTaskMode()
                 result.success(true)
             }
             else -> {
@@ -91,6 +105,32 @@ class AppBlockerPlugin : MethodCallHandler {
             context?.startActivity(intent)
             true
         } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun requestSystemOverlayPermission(): Boolean {
+        return try {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+            intent.data = android.net.Uri.parse("package:${context?.packageName}")
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context?.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            println("Error requesting overlay permission: $e")
+            false
+        }
+    }
+
+    private fun hasSystemOverlayPermission(): Boolean {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Settings.canDrawOverlays(context)
+            } else {
+                true // Permission granted by default on older versions
+            }
+        } catch (e: Exception) {
+            println("Error checking overlay permission: $e")
             false
         }
     }

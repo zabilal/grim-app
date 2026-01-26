@@ -102,9 +102,7 @@ class GoalsController extends GetxController {
     final currentYear = dashboardController.currentYear.value;
 
     // Save goals for current quarter and year
-    storage.write(
-      'goals_${currentQuarter}_${currentYear}',
-      goals.map((g) => g.toJson()).toList(),
-    );
+    final goalsData = goals.map((g) => g.toJson()).toList();
+    storage.write('goals_${currentQuarter}_${currentYear}', goalsData);
   }
 }
