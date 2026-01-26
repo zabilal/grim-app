@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:grim_app/app/routes/app_pages.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -78,14 +79,14 @@ class _OnboardingViewState extends State<OnboardingView> {
             right: 20,
             child: currentPage == pages.length - 1
                 ? ElevatedButton(
-                    onPressed: () => Get.offNamed('/login'),               
+                    onPressed: () => Get.offNamed(Routes.dashboard),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: Text('BEGIN YOUR JOURNEY'),
                   )
                 : TextButton(
-                    onPressed: () => Get.offNamed('/login'),
+                    onPressed: () => Get.offNamed(Routes.dashboard),
                     child: Text('SKIP'),
                   ),
           ),
@@ -150,4 +151,3 @@ class OnboardingPage {
     required this.color,
   });
 }
-

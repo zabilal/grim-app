@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:grim_app/app/data/models/goal.dart';
-import 'package:grim_app/app/modules/goals/controllers/goals_controller.dart';
-import 'package:grim_app/app/modules/execution/controllers/execution_controller.dart';
 
 class DashboardController extends GetxController {
   final storage = GetStorage();
@@ -25,8 +23,8 @@ class DashboardController extends GetxController {
     calculateProgress();
 
     // Setup reactive listeners for quarter/year changes
-    ever(currentQuarter, (_) => _refreshOtherControllers());
-    ever(currentYear, (_) => _refreshOtherControllers());
+    ever(currentQuarter, (_) => _handleQuarterYearChange());
+    ever(currentYear, (_) => _handleQuarterYearChange());
   }
 
   void loadQuarterSettings() {
@@ -67,35 +65,13 @@ class DashboardController extends GetxController {
 
   void _refreshOtherControllers() {
     try {
-      // Dispose old controllers if they exist
-      if (Get.isRegistered<GoalsController>()) {
-        Get.delete<GoalsController>();
-      }
-      if (Get.isRegistered<ExecutionController>()) {
-        Get.delete<ExecutionController>();
-      }
-
-      // Recreate controllers with fresh state
-      Get.put(GoalsController());
-      Get.put(ExecutionController());
-
-      // Wait a moment for controllers to initialize
-      Future.delayed(Duration(milliseconds: 100), () {
-        try {
-          // Refresh the new controllers
-          final goalsController = Get.find<GoalsController>();
-          goalsController.loadGoals();
-
-          final executionController = Get.find<ExecutionController>();
-          executionController.loadTasks();
-          executionController.loadTopGoal();
-        } catch (e) {
-          print('Error refreshing controllers after delay: $e');
-        }
-      });
+      // Controllers are managed independently now
+      // Just reload local data when quarter/year changes
+      loadGoals();
+      loadTodayTopGoal();
+      calculateProgress();
     } catch (e) {
-      // Controllers might not be initialized yet
-      print('Error refreshing controllers: $e');
+      print('Error refreshing dashboard data: $e');
     }
   }
 
@@ -111,11 +87,22 @@ class DashboardController extends GetxController {
   }
 
   void loadTodayTopGoal() {
-    final goalsData = storage.read<Map>('top_goals_per_day');
+    // Load top goals for current quarter and year
+    final goalsData = storage.read<Map>(
+      'top_goals_per_day_${currentQuarter.value}_${currentYear.value}',
+    );
     if (goalsData != null) {
       final topGoalsPerDay = Map<String, String>.from(goalsData);
       final currentDay = _getCurrentDayString();
       todayTopGoal.value = topGoalsPerDay[currentDay] ?? '';
+    } else {
+      // Fallback to old format if quarter-specific data doesn't exist
+      final fallbackData = storage.read<Map>('top_goals_per_day');
+      if (fallbackData != null) {
+        final topGoalsPerDay = Map<String, String>.from(fallbackData);
+        final currentDay = _getCurrentDayString();
+        todayTopGoal.value = topGoalsPerDay[currentDay] ?? '';
+      }
     }
   }
 
@@ -185,5 +172,12 @@ class DashboardController extends GetxController {
       'goals_${currentQuarter.value}_${currentYear.value}',
       goals.map((g) => g.toJson()).toList(),
     );
+  }
+
+  void _handleQuarterYearChange() {
+    // Refresh other controllers to load quarter-specific data
+    _refreshOtherControllers();
+    // Reload today's top goal for new quarter/year
+    loadTodayTopGoal();
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:grim_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:grim_app/app/modules/settings/controllers/settings_controller.dart';
 import 'package:grim_app/app/utils/theme_controller.dart';
 
@@ -9,73 +8,12 @@ class SettingsView extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
     final themeController = Get.find<ThemeController>();
 
     return Scaffold(
       appBar: AppBar(title: Text('SETTINGS'), centerTitle: true),
       body: ListView(
         children: [
-          _buildSection('ACCOUNT', [
-            Obx(
-              () => ListTile(
-                leading: CircleAvatar(
-                  child: Text(
-                    _getInitials(authController.currentUser.value?['name']),
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                title: Text(
-                  authController.currentUser.value?['name'] ?? 'User',
-                ),
-                subtitle: Text(
-                  authController.currentUser.value?['email'] ?? '',
-                ),
-              ),
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.cloud_sync),
-              title: Text('Sync with Google'),
-              subtitle: Text('Enable cloud synchronization'),
-              trailing: Obx(
-                () => Switch(
-                  value: controller.cloudSyncEnabled.value,
-                  onChanged: (value) {
-                    controller.toggleCloudSync();
-                  },
-                ),
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.logout, color: Colors.red),
-              title: Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Get.dialog(
-                  AlertDialog(
-                    title: Text('Confirm Logout'),
-                    content: Text('Are you sure you want to logout?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Get.back(),
-                        child: Text('CANCEL'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Get.back();
-                          authController.logout();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                        ),
-                        child: Text('LOGOUT'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ]),
           _buildSection('APPEARANCE', [
             Obx(
               () => SwitchListTile(

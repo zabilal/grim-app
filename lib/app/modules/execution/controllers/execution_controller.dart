@@ -197,9 +197,10 @@ class ExecutionController extends GetxController {
     final currentYear = dashboardController.currentYear.value;
 
     // Save tasks for current quarter and year
+    final tasksData = tasks.map((t) => t.toJson()).toList();
     storage.write(
       'execution_tasks_${currentQuarter}_${currentYear}',
-      tasks.map((t) => t.toJson()).toList(),
+      tasksData,
     );
   }
 
